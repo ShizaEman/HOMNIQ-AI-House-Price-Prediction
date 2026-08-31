@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="HOMNIQ AI | House Price Prediction",
     page_icon="🏡",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 # =========================
 # MODEL PATH
@@ -1093,9 +1093,10 @@ elif page == "ℹ️ About Project":
 
 render_html("""
 <div class="footer">
-    Developed by Shiza Eman
+    Developed by 
     <span class="footer-name">Shiza Eman</span>
     &nbsp; • &nbsp;
+    
     "Machine Learning Project • Artificial Intelligence • Real Estate Intelligence"
 </div>
 """)
