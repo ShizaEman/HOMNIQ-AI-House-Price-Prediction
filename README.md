@@ -1,5 +1,5 @@
 # HOMNIQ-AI-House-Price-Prediction
-#Live DEMO: YOUR_STREAMLIT_APP_URL
+#Live DEMO: https://github.com/ShizaEman/HOMNIQ-AI-House-Price-Prediction.git
 ## 📌 Project Overview
 
 HOMNIQ AI is an end-to-end Machine Learning project developed to predict house prices using property-related features and regression algorithms.
