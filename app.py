@@ -19,16 +19,27 @@ st.set_page_config(
 # LOAD MODEL
 # ============================================================
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "house_price_model.pkl")
-
+MODEL_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "house_price_model.pkl"
+)
 
 @st.cache_resource
 def load_model():
+    if not os.path.isfile(MODEL_PATH):
+        st.error("❌ Model file not found.")
+        st.write("Looking for model at:")
+        st.code(MODEL_PATH)
+        st.write("Files available in app directory:")
+        st.write(os.listdir(os.path.dirname(os.path.abspath(__file__))))
+
+        return None
+
     return joblib.load(MODEL_PATH)
 
 
 model = load_model()
+    
 
 
 # ============================================================
