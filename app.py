@@ -1,101 +1,97 @@
-
 import streamlit as st
 import pandas as pd
+import numpy as np
 import joblib
 import os
+import textwrap
 
 # ============================================================
-# PAGE CONFIG
+# PAGE CONFIGURATION
 # ============================================================
 
 st.set_page_config(
-    page_title="HOMENIQ | House Price Prediction",
-    page_icon="🏠",
+    page_title="HOMNIQ AI | House Price Prediction",
+    page_icon="🏡",
     layout="wide",
     initial_sidebar_state="collapsed"
+)
+# =========================
+# MODEL PATH
+# =========================
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "house_price_model.pkl"
 )
 
 # ============================================================
 # LOAD MODEL
 # ============================================================
 
-MODEL_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "house_price_model.pkl"
-)
-
 @st.cache_resource
 def load_model():
-    if not os.path.isfile(MODEL_PATH):
-        st.error("❌ Model file not found.")
-        st.write("Looking for model at:")
-        st.code(MODEL_PATH)
-        st.write("Files available in app directory:")
-        st.write(os.listdir(os.path.dirname(os.path.abspath(__file__))))
-
+    if not os.path.exists(MODEL_PATH):
+        st.error("⚠️ Model file not found.")
+        st.write("Expected path:", MODEL_PATH)
         return None
 
-    return joblib.load(MODEL_PATH)
+    try:
+        model = joblib.load(MODEL_PATH)
+        return model
+
+    except Exception as e:
+        st.error("⚠️ Model file could not be loaded.")
+        st.error(f"Error: {e}")
+        return None
 
 
 model = load_model()
-    
 
 
 # ============================================================
-# SESSION STATE
+# IMPORTANT HTML RENDER FUNCTION
+# THIS PREVENTS <div> CODE FROM SHOWING ON SCREEN
 # ============================================================
 
-if "page" not in st.session_state:
-    st.session_state.page = "Home"
+def render_html(content):
+    st.html(
+        textwrap.dedent(content).strip()
+    )
 
 
 # ============================================================
-# CUSTOM CSS
+# CSS
 # ============================================================
 
-st.markdown("""
+render_html("""
 <style>
 
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
-
-/* ------------------------------------------------------------
+/* =========================
    GLOBAL
------------------------------------------------------------- */
-
-html, body, [class*="css"] {
-    font-family: 'Manrope', sans-serif;
-}
-
-#MainMenu {
-    visibility: hidden;
-}
-
-footer {
-    visibility: hidden;
-}
-
-header {
-    visibility: hidden;
-}
+========================= */
 
 .stApp {
     background:
-        radial-gradient(circle at 5% 10%, rgba(34,115,220,0.08), transparent 25%),
-        radial-gradient(circle at 95% 20%, rgba(34,115,220,0.08), transparent 25%),
-        #F5F8FC;
-    color: #10233D;
+        radial-gradient(circle at 90% 5%, #e8f1ee 0%, transparent 25%),
+        linear-gradient(135deg, #f7f8f6 0%, #eef3f0 100%);
 }
 
 .block-container {
-    max-width: 1450px;
-    padding-top: 25px;
-    padding-bottom: 30px;
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+    max-width: 1500px;
 }
 
-/* ------------------------------------------------------------
+/* Remove unnecessary Streamlit spaces */
+[data-testid="stHeader"] {
+    background: transparent;
+}
+
+/* =========================
    ANIMATIONS
------------------------------------------------------------- */
+========================= */
 
 @keyframes fadeUp {
     0% {
@@ -109,7 +105,7 @@ header {
     }
 }
 
-@keyframes floatCard {
+@keyframes floating {
     0%, 100% {
         transform: translateY(0px);
     }
@@ -121,1087 +117,857 @@ header {
 
 @keyframes glow {
     0%, 100% {
-        box-shadow: 0 15px 40px rgba(32, 101, 201, 0.18);
+        box-shadow: 0 0 0 rgba(46, 125, 91, 0);
     }
 
     50% {
-        box-shadow: 0 20px 55px rgba(32, 101, 201, 0.35);
+        box-shadow: 0 0 30px rgba(46, 125, 91, 0.18);
     }
 }
 
-/* ------------------------------------------------------------
-   LOGO
------------------------------------------------------------- */
 
-.logo-card {
-    animation: fadeUp 0.8s ease;
+/* =========================
+   SIDEBAR
+========================= */
+
+[data-testid="stSidebar"] {
+    background: #ffffff;
+    border-right: 1px solid #dfe7e2;
 }
 
-.logo-title {
-    font-size: 38px;
-    font-weight: 800;
-    color: #10233D;
-    letter-spacing: -1.5px;
-    line-height: 1;
+[data-testid="stSidebar"] * {
+    color: #24342b;
 }
 
-.logo-title span {
-    color: #1769E0;
-}
 
-.logo-subtitle {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 2px;
-    color: #75839A;
-    margin-top: 8px;
-}
-
-/* ------------------------------------------------------------
-   NAVIGATION BUBBLES
------------------------------------------------------------- */
-
-div[data-testid="stHorizontalBlock"] .stButton > button {
-    width: 100%;
-    min-height: 56px !important;
-    border-radius: 999px !important;
-
-    background: #FFFFFF !important;
-    color: #10233D !important;
-
-    border: 1.5px solid #D7E1EC !important;
-
-    font-size: 14px !important;
-    font-weight: 800 !important;
-
-    transition: all 0.3s ease !important;
-
-    box-shadow: 0 6px 18px rgba(20, 50, 90, 0.05);
-}
-
-div[data-testid="stHorizontalBlock"] .stButton > button:hover {
-    background: #1769E0 !important;
-    color: white !important;
-
-    border-color: #1769E0 !important;
-
-    transform: translateY(-4px) !important;
-
-    box-shadow: 0 12px 30px rgba(23, 105, 224, 0.25) !important;
-}
-
-/* ------------------------------------------------------------
+/* =========================
    HERO
------------------------------------------------------------- */
+========================= */
 
 .hero-card {
-    margin-top: 35px;
-    min-height: 500px;
-
-    border-radius: 34px;
-
+    position: relative;
+    overflow: hidden;
+    min-height: 300px;
+    padding: 55px;
+    border-radius: 28px;
     background:
         linear-gradient(
             90deg,
-            rgba(8, 25, 48, 0.94) 0%,
-            rgba(12, 35, 65, 0.88) 42%,
-            rgba(12, 35, 65, 0.28) 68%,
-            rgba(12, 35, 65, 0.05) 100%
+            rgba(20, 40, 31, 0.96) 0%,
+            rgba(20, 40, 31, 0.82) 45%,
+            rgba(20, 40, 31, 0.15) 100%
         ),
-        url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1800&q=90');
+        url("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1800&q=85");
 
     background-size: cover;
     background-position: center;
 
-    display: flex;
-    align-items: center;
-
-    overflow: hidden;
-
-    box-shadow: 0 25px 70px rgba(16, 35, 61, 0.18);
-
-    animation: fadeUp 0.9s ease;
+    animation: fadeUp 0.8s ease;
+    box-shadow: 0 18px 45px rgba(25, 45, 34, 0.12);
 }
 
-.hero-content {
-    max-width: 700px;
-    padding: 65px 8%;
-}
-
-.hero-badge {
+.hero-tag {
     display: inline-block;
-
-    background: rgba(255,255,255,0.13);
-    border: 1px solid rgba(255,255,255,0.25);
-
-    color: #CFE5FF;
-
-    padding: 9px 18px;
-
-    border-radius: 999px;
-
-    font-size: 12px;
-    font-weight: 800;
+    background: rgba(255,255,255,0.16);
+    color: #d9f2df;
+    padding: 8px 18px;
+    border-radius: 30px;
+    font-size: 13px;
     letter-spacing: 1px;
+    margin-bottom: 18px;
 }
 
 .hero-title {
-    margin-top: 22px;
-
-    color: #FFFFFF;
-
-    font-family: 'Playfair Display', serif;
-
-    font-size: 74px;
-    line-height: 1.05;
-
+    font-size: 52px;
     font-weight: 800;
-
-    letter-spacing: -2px;
+    line-height: 1.08;
+    color: white;
+    max-width: 650px;
 }
 
 .hero-title span {
-    color: #75B6FF;
+    color: #8ee0a8;
 }
 
-.hero-text {
-    color: #D6E4F4;
-
+.hero-description {
+    margin-top: 20px;
+    color: #e5eee8;
     font-size: 18px;
-    line-height: 1.8;
-
-    margin-top: 22px;
-
-    max-width: 620px;
+    line-height: 1.7;
+    max-width: 580px;
 }
 
-.hero-stat-row {
+.hero-mini-stats {
     display: flex;
-    gap: 15px;
-    margin-top: 35px;
+    gap: 28px;
+    margin-top: 28px;
 }
 
 .hero-stat {
-    background: rgba(255,255,255,0.12);
-
-    backdrop-filter: blur(10px);
-
-    border: 1px solid rgba(255,255,255,0.18);
-
-    padding: 15px 20px;
-
-    border-radius: 18px;
-
-    min-width: 130px;
+    color: white;
 }
 
 .hero-stat-number {
-    color: #FFFFFF;
-
-    font-size: 23px;
+    font-size: 22px;
     font-weight: 800;
 }
 
 .hero-stat-label {
-    color: #BFD3E9;
-
-    font-size: 11px;
-    font-weight: 700;
-
-    margin-top: 3px;
-}
-
-/* ------------------------------------------------------------
-   SECTION HEADINGS
------------------------------------------------------------- */
-
-.section-kicker {
-    color: #1769E0;
-
     font-size: 12px;
-    font-weight: 800;
-
-    letter-spacing: 2px;
+    opacity: 0.75;
 }
+
+
+/* =========================
+   SECTION
+========================= */
 
 .section-title {
+    margin-top: 35px;
+    margin-bottom: 6px;
+    font-size: 28px;
+    font-weight: 750;
+    color: #1d3127;
+}
+
+.section-subtitle {
+    color: #718077;
+    margin-bottom: 20px;
+}
+
+
+/* =========================
+   CARDS
+========================= */
+
+.custom-card {
+    background: rgba(255,255,255,0.96);
+    border: 1px solid #e0e8e2;
+    padding: 28px;
+    border-radius: 22px;
+    box-shadow: 0 10px 30px rgba(38, 57, 45, 0.06);
+    animation: fadeUp 0.7s ease;
+}
+
+.custom-card:hover {
+    transform: translateY(-3px);
+    transition: 0.3s;
+    box-shadow: 0 18px 40px rgba(38, 57, 45, 0.10);
+}
+
+
+/* =========================
+   RESULT CARD
+========================= */
+
+.result-card {
+    background:
+        linear-gradient(145deg, #16382a, #24513e);
+
+    color: white;
+    padding: 38px;
+    border-radius: 25px;
+    text-align: center;
+    min-height: 350px;
+
+    animation:
+        fadeUp 0.8s ease,
+        glow 3s infinite;
+}
+
+.result-label {
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    color: #b8dbc3;
+}
+
+.result-title {
+    margin-top: 20px;
+    font-size: 22px;
+}
+
+.price-value {
     font-size: 48px;
     font-weight: 800;
-
-    letter-spacing: -2px;
-
-    color: #10233D;
-
-    margin-top: 8px;
+    margin: 15px 0;
+    color: #91e7ad;
 }
 
-.section-text {
-    color: #63728A;
-
-    font-size: 16px;
-    line-height: 1.8;
-
-    margin-top: 10px;
+.result-description {
+    color: #d8e8dc;
+    line-height: 1.6;
 }
 
-/* ------------------------------------------------------------
+
+/* =========================
    FEATURE CARDS
------------------------------------------------------------- */
+========================= */
 
 .feature-card {
-    height: 100%;
-
-    background: #FFFFFF;
-
-    border: 1px solid #E2EAF2;
-
-    border-radius: 24px;
-
-    padding: 28px;
-
-    box-shadow: 0 12px 35px rgba(16, 35, 61, 0.06);
-
-    transition: all 0.3s ease;
-}
-
-.feature-card:hover {
-    transform: translateY(-8px);
-
-    border-color: #A9C9F5;
-
-    box-shadow: 0 22px 45px rgba(23, 105, 224, 0.14);
+    background: white;
+    border: 1px solid #e3ebe5;
+    padding: 20px;
+    border-radius: 18px;
+    min-height: 130px;
 }
 
 .feature-icon {
-    width: 60px;
-    height: 60px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: linear-gradient(135deg, #E5F1FF, #D4E8FF);
-
-    border-radius: 18px;
-
     font-size: 28px;
 }
 
 .feature-title {
-    margin-top: 20px;
-
-    color: #10233D;
-
-    font-size: 21px;
-    font-weight: 800;
+    font-size: 17px;
+    font-weight: 700;
+    color: #20352a;
+    margin-top: 10px;
 }
 
 .feature-text {
-    margin-top: 9px;
-
-    color: #6C7B90;
-
     font-size: 13px;
-    line-height: 1.7;
-}
-
-/* ------------------------------------------------------------
-   PREDICTION CONTAINER
------------------------------------------------------------- */
-
-.prediction-container {
-    background: #FFFFFF;
-
-    border: 1px solid #E2EAF2;
-
-    border-radius: 30px;
-
-    padding: 35px;
-
-    box-shadow: 0 15px 45px rgba(16, 35, 61, 0.08);
-
-    animation: fadeUp 0.8s ease;
-}
-
-.prediction-title {
-    font-size: 36px;
-
-    color: #10233D;
-
-    font-weight: 800;
-
-    letter-spacing: -1px;
-}
-
-.prediction-subtitle {
-    color: #6C7B90;
-
-    font-size: 14px;
-
+    color: #748078;
     margin-top: 7px;
 }
 
-/* ------------------------------------------------------------
-   INPUTS
------------------------------------------------------------- */
 
-.stNumberInput label,
-.stSelectbox label {
-    color: #1E3555 !important;
-
-    font-size: 14px !important;
-
-    font-weight: 800 !important;
-}
-
-div[data-baseweb="input"] > div,
-div[data-baseweb="select"] > div {
-    min-height: 48px;
-
-    background: #F8FBFF !important;
-
-    border: 1.5px solid #D7E2EF !important;
-
-    border-radius: 14px !important;
-}
-
-input {
-    color: #10233D !important;
-
-    font-size: 15px !important;
-
-    font-weight: 600 !important;
-}
-
-div[data-baseweb="select"] span {
-    color: #10233D !important;
-
-    font-weight: 600 !important;
-}
-
-/* ------------------------------------------------------------
-   PREDICT BUTTON
------------------------------------------------------------- */
-
-.predict-btn-container .stButton > button {
-    min-height: 60px !important;
-
-    background: linear-gradient(
-        135deg,
-        #1769E0,
-        #0D3F86
-    ) !important;
-
-    color: white !important;
-
-    border: none !important;
-
-    border-radius: 18px !important;
-
-    font-size: 16px !important;
-
-    font-weight: 800 !important;
-
-    animation: glow 3s infinite !important;
-}
-
-.predict-btn-container .stButton > button:hover {
-    transform: translateY(-3px) !important;
-}
-
-/* ------------------------------------------------------------
-   RESULT CARD
------------------------------------------------------------- */
-
-.result-card {
-    background:
-        linear-gradient(
-            135deg,
-            #0D2B52,
-            #1769E0
-        );
-
-    border-radius: 28px;
-
-    padding: 45px 30px;
-
-    text-align: center;
-
-    color: white;
-
-    min-height: 360px;
-
-    display: flex;
-    flex-direction: column;
-
-    justify-content: center;
-
-    animation: floatCard 5s ease-in-out infinite;
-
-    box-shadow: 0 25px 55px rgba(23, 105, 224, 0.25);
-}
-
-.result-icon {
-    font-size: 60px;
-}
-
-.result-label {
-    color: #BFD9F8;
-
-    font-size: 14px;
-
-    font-weight: 800;
-
-    letter-spacing: 1.5px;
-
-    margin-top: 15px;
-}
-
-.result-price {
-    color: white;
-
-    font-size: 55px;
-
-    font-weight: 800;
-
-    margin-top: 12px;
-
-    letter-spacing: -2px;
-}
-
-.result-note {
-    margin-top: 18px;
-
-    color: #D6E9FF;
-
-    font-size: 13px;
-
-    line-height: 1.7;
-}
-
-/* ------------------------------------------------------------
-   SUMMARY CARDS
------------------------------------------------------------- */
-
-.summary-card {
-    background: #F7FAFE;
-
-    border: 1px solid #E2EAF2;
-
-    border-radius: 18px;
-
-    padding: 20px;
-}
-
-.summary-label {
-    color: #78869A;
-
-    font-size: 11px;
-
-    font-weight: 800;
-
-    letter-spacing: 1px;
-}
-
-.summary-value {
-    color: #10233D;
-
-    font-size: 19px;
-
-    font-weight: 800;
-
-    margin-top: 6px;
-}
-
-/* ------------------------------------------------------------
+/* =========================
    FOOTER
------------------------------------------------------------- */
+========================= */
 
-.footer-card {
-    margin-top: 45px;
-
-    background: #10233D;
-
-    border-radius: 28px;
-
-    padding: 30px;
-
+.footer {
+    margin-top: 50px;
+    padding: 25px;
     text-align: center;
-
-    color: #BFD0E3;
-}
-
-.footer-title {
-    color: white;
-
-    font-size: 22px;
-
-    font-weight: 800;
-}
-
-.footer-text {
-    margin-top: 8px;
-
-    font-size: 13px;
+    color: #66746b;
+    border-top: 1px solid #dfe7e2;
 }
 
 .footer-name {
-    color: #75B6FF;
-
+    color: #2f8256;
     font-weight: 800;
 }
 
-/* ------------------------------------------------------------
-   MOBILE
------------------------------------------------------------- */
+
+/* =========================
+   BUTTON
+========================= */
+
+.stButton > button {
+    width: 100%;
+    height: 55px;
+
+    border: none;
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2f7f58,
+            #5bb77a
+        );
+
+    color: white;
+
+    font-size: 17px;
+    font-weight: 700;
+
+    transition: all 0.3s ease;
+
+    box-shadow:
+        0 10px 20px
+        rgba(47, 127, 88, 0.18);
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 15px 28px
+        rgba(47, 127, 88, 0.28);
+}
+
+
+/* =========================
+   INPUTS
+========================= */
+
+.stNumberInput input {
+    border-radius: 10px !important;
+}
+
+.stNumberInput label {
+    font-weight: 600 !important;
+    color: #324239 !important;
+}
+
+
+/* ============================================================
+   RESPONSIVE DESIGN — keeps desktop design unchanged
+   ============================================================ */
+
+@media (max-width: 1100px) {
+    .block-container {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+    .hero-card {
+        padding: 42px;
+    }
+    .hero-title {
+        font-size: 44px;
+    }
+}
 
 @media (max-width: 768px) {
-
-    .hero-title {
-        font-size: 46px;
-    }
-
-    .section-title {
-        font-size: 34px;
-    }
-
-    .prediction-title {
-        font-size: 30px;
+    .block-container {
+        padding: 0.8rem 0.75rem 1.5rem 0.75rem;
+        max-width: 100%;
     }
 
     .hero-card {
-        min-height: 540px;
+        min-height: 280px;
+        padding: 30px 24px;
+        border-radius: 22px;
+        background-position: center;
     }
 
-    .hero-stat-row {
+    .hero-title {
+        font-size: 34px;
+        line-height: 1.12;
+        max-width: 100%;
+    }
+
+    .hero-description {
+        font-size: 15px;
+        line-height: 1.55;
+        max-width: 100%;
+        margin-top: 14px;
+    }
+
+    .hero-tag {
+        font-size: 10px;
+        padding: 7px 12px;
+        margin-bottom: 12px;
+    }
+
+    .hero-mini-stats {
         flex-wrap: wrap;
+        gap: 14px 22px;
+        margin-top: 20px;
+    }
+
+    .hero-stat-number {
+        font-size: 18px;
+    }
+
+    .hero-stat-label {
+        font-size: 9px;
+    }
+
+    .section-title {
+        font-size: 24px;
+        margin-top: 25px;
+    }
+
+    .section-subtitle {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .custom-card {
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    .result-card {
+        min-height: 300px;
+        padding: 28px 18px;
+        border-radius: 20px;
+    }
+
+    .price-value {
+        font-size: 38px;
+    }
+
+    .result-title {
+        font-size: 19px;
+    }
+
+    .feature-card {
+        min-height: auto;
+        padding: 18px;
+        margin-bottom: 12px;
+    }
+
+    .footer {
+        margin-top: 30px;
+        padding: 20px 10px;
+        font-size: 13px;
+    }
+
+    /* Streamlit's native columns stack cleanly on small screens */
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap;
+    }
+
+    /* Prevent tables/charts from breaking the viewport */
+    [data-testid="stDataFrame"],
+    [data-testid="stArrowVegaLiteChart"],
+    [data-testid="stVegaLiteChart"] {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .stButton > button {
+        height: 52px;
+        font-size: 15px;
+    }
+
+    .stNumberInput input {
+        font-size: 16px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .block-container {
+        padding-left: 0.55rem;
+        padding-right: 0.55rem;
+    }
+
+    .hero-card {
+        padding: 24px 18px;
+        min-height: 300px;
+        border-radius: 18px;
+    }
+
+    .hero-title {
+        font-size: 29px;
+    }
+
+    .hero-description {
+        font-size: 14px;
+    }
+
+    .hero-mini-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .hero-stat-number {
+        font-size: 16px;
+    }
+
+    .hero-stat-label {
+        font-size: 8px;
+        line-height: 1.25;
+    }
+
+    .section-title {
+        font-size: 21px;
+    }
+
+    .price-value {
+        font-size: 32px;
+    }
+
+    .feature-title {
+        font-size: 16px;
+    }
+
+    .feature-text {
+        font-size: 12px;
+    }
+}
+
+/* Slightly reduce sidebar width on medium screens */
+@media (min-width: 769px) and (max-width: 1200px) {
+    [data-testid="stSidebar"] {
+        min-width: 240px;
+        max-width: 260px;
     }
 }
 
 </style>
-""", unsafe_allow_html=True)
+""")
 
 
 # ============================================================
-# HEADER + NAVIGATION
+# SIDEBAR
 # ============================================================
 
-st.markdown("""
-<div class="logo-card">
-    <div class="logo-title">
-        HOME<span>NIQ</span>
-    </div>
+with st.sidebar:
 
-    <div class="logo-subtitle">
-        AI REAL ESTATE INTELLIGENCE
-    </div>
-</div>
-""", unsafe_allow_html=True)
+    render_html("""
+    <div style="
+        padding: 20px 5px 25px 5px;
+        border-bottom: 1px solid #e2e9e4;
+        margin-bottom: 20px;
+    ">
+        <div style="
+            font-size: 26px;
+            font-weight: 800;
+            color: #204431;
+        ">
+            🏡 HOMNIQ
+        </div>
 
-
-st.write("")
-
-nav1, nav2, nav3, nav4, nav5 = st.columns(5)
-
-with nav1:
-    if st.button("⌂  HOME", key="home_nav"):
-        st.session_state.page = "Home"
-
-with nav2:
-    if st.button("✦  PREDICT", key="predict_nav"):
-        st.session_state.page = "Predict"
-
-with nav3:
-    if st.button("▥  INSIGHTS", key="insights_nav"):
-        st.session_state.page = "Insights"
-
-with nav4:
-    if st.button("◎  PROJECT", key="project_nav"):
-        st.session_state.page = "Project"
-
-with nav5:
-    if st.button("START NOW  →", key="start_nav"):
-        st.session_state.page = "Predict"
-
-
-st.write("")
-st.write("")
-
-
-# ============================================================
-# HOME PAGE
-# ============================================================
-
-if st.session_state.page == "Home":
-
-    st.markdown("""
-    <div class="hero-card">
-        <div class="hero-content">
-
-            <div class="hero-badge">
-                ✦ MACHINE LEARNING POWERED
-            </div>
-
-            <div class="hero-title">
-                Know What Your<br>
-                Home Is <span>Worth.</span>
-            </div>
-
-            <div class="hero-text">
-                HOMENIQ uses Machine Learning to analyze important
-                property features and generate intelligent house price
-                predictions in seconds.
-            </div>
-
-            <div class="hero-stat-row">
-
-                <div class="hero-stat">
-                    <div class="hero-stat-number">
-                        97.24%
-                    </div>
-                    <div class="hero-stat-label">
-                        R² MODEL SCORE
-                    </div>
-                </div>
-
-                <div class="hero-stat">
-                    <div class="hero-stat-number">
-                        8
-                    </div>
-                    <div class="hero-stat-label">
-                        PROPERTY FEATURES
-                    </div>
-                </div>
-
-                <div class="hero-stat">
-                    <div class="hero-stat-number">
-                        AI
-                    </div>
-                    <div class="hero-stat-label">
-                        SMART VALUATION
-                    </div>
-                </div>
-
-            </div>
-
+        <div style="
+            color: #6f7f75;
+            font-size: 13px;
+            margin-top: 5px;
+        ">
+            AI Real Estate Intelligence
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
+    page = st.radio(
+        "Navigation",
+        [
+            "🏠 Prediction",
+            "📊 Model Insights",
+            "ℹ️ About Project"
+        ],
+        label_visibility="collapsed"
+    )
 
-    st.write("")
-    st.write("")
+    st.markdown("---")
 
-    st.markdown("""
-    <div class="section-kicker">
-        WHY HOMENIQ
-    </div>
-
-    <div class="section-title">
-        Smarter Property Decisions.
-    </div>
-
-    <div class="section-text">
-        A modern Machine Learning application designed to transform
-        property information into intelligent price predictions.
-    </div>
-    """, unsafe_allow_html=True)
-
-
-    st.write("")
-
-    f1, f2, f3 = st.columns(3)
-
-    with f1:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">🧠</div>
-
-            <div class="feature-title">
-                Machine Learning
-            </div>
-
-            <div class="feature-text">
-                A trained Linear Regression model analyzes important
-                property characteristics to estimate house values.
-            </div>
+    render_html("""
+    <div style="
+        background: #eef6f0;
+        border: 1px solid #d9eadc;
+        padding: 18px;
+        border-radius: 15px;
+        margin-top: 20px;
+    ">
+        <div style="
+            font-weight: 700;
+            color: #286040;
+            margin-bottom: 7px;
+        ">
+            🤖 AI Powered
         </div>
-        """, unsafe_allow_html=True)
 
-    with f2:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">⚡</div>
-
-            <div class="feature-title">
-                Instant Prediction
-            </div>
-
-            <div class="feature-text">
-                Enter your property details and receive a house
-                price prediction instantly.
-            </div>
+        <div style="
+            font-size: 13px;
+            color: #637368;
+            line-height: 1.5;
+        ">
+            Intelligent property value estimation using Machine Learning.
         </div>
-        """, unsafe_allow_html=True)
-
-    with f3:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">📊</div>
-
-            <div class="feature-title">
-                Data Driven
-            </div>
-
-            <div class="feature-text">
-                Predictions are generated from meaningful housing
-                features and a carefully evaluated ML model.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """)
 
 
 # ============================================================
 # PREDICTION PAGE
 # ============================================================
 
-elif st.session_state.page == "Predict":
+if page == "🏠 Prediction":
 
-    st.markdown("""
-    <div class="prediction-container">
+    # HERO
+    render_html("""
+    <div class="hero-card">
 
-        <div class="section-kicker">
-            PROPERTY VALUATION
+        <div class="hero-tag">
+            ✦ MACHINE LEARNING • REAL ESTATE
         </div>
 
-        <div class="prediction-title">
-            Estimate Your Property Value
+        <div class="hero-title">
+            Predict Your <br>
+            <span>House Price</span> with AI
         </div>
 
-        <div class="prediction-subtitle">
-            Enter your property information and let HOMENIQ
-            calculate an AI-powered price prediction.
+        <div class="hero-description">
+            Get an intelligent property value estimate using a
+            trained Machine Learning regression model.
+        </div>
+
+        <div class="hero-mini-stats">
+
+            <div class="hero-stat">
+                <div class="hero-stat-number">97.24%</div>
+                <div class="hero-stat-label">BEST R² SCORE</div>
+            </div>
+
+            <div class="hero-stat">
+                <div class="hero-stat-number">4</div>
+                <div class="hero-stat-label">MODELS TESTED</div>
+            </div>
+
+            <div class="hero-stat">
+                <div class="hero-stat-number">8</div>
+                <div class="hero-stat-label">FEATURES USED</div>
+            </div>
+
         </div>
 
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
+    render_html("""
+    <div class="section-title">
+        Property Information
+    </div>
 
-    st.write("")
+    <div class="section-subtitle">
+        Enter the property details below to generate an estimated market price.
+    </div>
+    """)
 
+    # MAIN LAYOUT
+    col1, col2 = st.columns([1.25, 0.75], gap="large")
 
-    form_col, result_col = st.columns([1.15, 0.85], gap="large")
+    # ========================================================
+    # INPUT FORM
+    # ========================================================
 
+    with col1:
 
-    # --------------------------------------------------------
-    # PROPERTY FORM
-    # --------------------------------------------------------
+        render_html("""
+        <div class="custom-card">
+        """)
 
-    with form_col:
+        c1, c2 = st.columns(2)
 
-        st.markdown("""
-        <div class="prediction-container">
-
-            <div class="prediction-title">
-                🏠 Property Details
-            </div>
-
-            <div class="prediction-subtitle">
-                Complete the details below to generate your prediction.
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
-
-
-        st.write("")
-
-
-        col1, col2 = st.columns(2)
-
-
-        with col1:
-
-            overall_qual = st.selectbox(
+        with c1:
+            overall_qual = st.number_input(
                 "Overall Quality",
-                options=list(range(1, 11)),
-                index=5
+                min_value=1,
+                max_value=10,
+                value=6,
+                step=1
             )
 
             gr_liv_area = st.number_input(
                 "Living Area (sq ft)",
-                min_value=100,
-                max_value=20000,
-                value=1800
+                min_value=300,
+                value=1500,
+                step=50
             )
 
-            garage_cars = st.selectbox(
+            garage_cars = st.number_input(
                 "Garage Capacity",
-                options=[0, 1, 2, 3, 4, 5],
-                index=2
+                min_value=0,
+                max_value=5,
+                value=2,
+                step=1
             )
+
+            total_bsmt_sf = st.number_input(
+                "Basement Area (sq ft)",
+                min_value=0,
+                value=900,
+                step=50
+            )
+
+        with c2:
 
             year_built = st.number_input(
                 "Year Built",
                 min_value=1800,
                 max_value=2026,
-                value=2005
+                value=2005,
+                step=1
             )
 
-
-        with col2:
-
-            total_bsmt_sf = st.number_input(
-                "Basement Area (sq ft)",
-                min_value=0,
-                max_value=10000,
-                value=900
-            )
-
-            full_bath = st.selectbox(
+            full_bath = st.number_input(
                 "Full Bathrooms",
-                options=[0, 1, 2, 3, 4, 5],
-                index=2
+                min_value=0,
+                max_value=10,
+                value=2,
+                step=1
             )
 
-            bedrooms = st.selectbox(
+            bedrooms = st.number_input(
                 "Bedrooms",
-                options=[1, 2, 3, 4, 5, 6, 7, 8],
-                index=2
+                min_value=0,
+                max_value=10,
+                value=3,
+                step=1
             )
 
             lot_area = st.number_input(
                 "Lot Area (sq ft)",
-                min_value=500,
-                max_value=100000,
-                value=8500
+                min_value=1000,
+                value=8500,
+                step=100
             )
 
-
-        st.write("")
-
-
-        st.markdown('<div class="predict-btn-container">', unsafe_allow_html=True)
-
         predict_button = st.button(
-            "GENERATE AI PRICE PREDICTION  →",
-            key="main_predict_button"
+            "✨ Generate AI Price Estimate"
         )
 
-        st.markdown('</div>', unsafe_allow_html=True)
+        render_html("""
+        </div>
+        """)
 
 
-    # --------------------------------------------------------
-    # RESULT
-    # --------------------------------------------------------
+    # ========================================================
+    # RESULT SECTION
+    # ========================================================
 
-    with result_col:
+    with col2:
 
         if predict_button:
 
-            input_data = pd.DataFrame([[
-                overall_qual,
-                gr_liv_area,
-                garage_cars,
-                total_bsmt_sf,
-                year_built,
-                full_bath,
-                bedrooms,
-                lot_area
-            ]], columns=[
-                "OverallQual",
-                "GrLivArea",
-                "GarageCars",
-                "TotalBsmtSF",
-                "YearBuilt",
-                "FullBath",
-                "BedroomAbvGr",
-                "LotArea"
-            ])
-
+            input_data = pd.DataFrame({
+                "OverallQual": [overall_qual],
+                "GrLivArea": [gr_liv_area],
+                "GarageCars": [garage_cars],
+                "TotalBsmtSF": [total_bsmt_sf],
+                "YearBuilt": [year_built],
+                "FullBath": [full_bath],
+                "BedroomAbvGr": [bedrooms],
+                "LotArea": [lot_area]
+            })
 
             prediction = model.predict(input_data)[0]
 
-
-            st.markdown(f"""
+            render_html(f"""
             <div class="result-card">
 
-                <div class="result-icon">
+                <div style="font-size:55px;">
+                    🏠
+                </div>
+
+                <div class="result-label">
+                    AI ESTIMATED PROPERTY VALUE
+                </div>
+
+                <div class="result-title">
+                    Predicted House Price
+                </div>
+
+                <div class="price-value">
+                    ${prediction:,.0f}
+                </div>
+
+                <div class="result-description">
+                    Based on the entered property characteristics
+                    and the trained Linear Regression model.
+                </div>
+
+                <div style="
+                    margin-top: 25px;
+                    padding-top: 20px;
+                    border-top: 1px solid rgba(255,255,255,0.15);
+                    font-size: 13px;
+                    color: #c8dbce;
+                ">
+                    ✓ Model R² Score: 97.24%<br>
+                    ✓ Prediction Status: Completed
+                </div>
+
+            </div>
+            """)
+
+        else:
+
+            render_html("""
+            <div class="result-card">
+
+                <div style="
+                    font-size: 70px;
+                    animation: floating 3s ease-in-out infinite;
+                ">
                     🏡
                 </div>
 
                 <div class="result-label">
-                    ESTIMATED HOUSE VALUE
+                    AI PREDICTION DASHBOARD
                 </div>
 
-                <div class="result-price">
-                    ${prediction:,.0f}
+                <div class="result-title">
+                    Your Property Estimate
                 </div>
 
-                <div class="result-note">
-                    Your Machine Learning prediction has been
-                    successfully generated based on the provided
-                    property characteristics.
-                </div>
-
-            </div>
-            """, unsafe_allow_html=True)
-
-
-        else:
-
-            prediction = None
-
-
-            st.markdown("""
-            <div class="result-card">
-
-                <div class="result-icon">
-                    ✦
-                </div>
-
-                <div class="result-label">
-                    READY FOR ANALYSIS
-                </div>
-
-                <div class="result-price">
-                    HOMENIQ AI
-                </div>
-
-                <div class="result-note">
-                    Enter the property details and generate an
-                    intelligent house price prediction.
+                <div style="
+                    margin-top: 25px;
+                    color: #d8e8dc;
+                    line-height: 1.7;
+                ">
+                    Enter the property information and click
+                    <b>Generate AI Price Estimate</b>
+                    to receive a predicted house value.
                 </div>
 
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
 
-        st.write("")
+    # ========================================================
+    # FEATURES
+    # ========================================================
 
-
-        s1, s2 = st.columns(2)
-
-
-        with s1:
-
-            st.markdown(f"""
-            <div class="summary-card">
-
-                <div class="summary-label">
-                    PROPERTY SIZE
-                </div>
-
-                <div class="summary-value">
-                    {gr_liv_area:,} sq ft
-                </div>
-
-            </div>
-            """, unsafe_allow_html=True)
-
-
-        with s2:
-
-            st.markdown(f"""
-            <div class="summary-card">
-
-                <div class="summary-label">
-                    OVERALL QUALITY
-                </div>
-
-                <div class="summary-value">
-                    {overall_qual} / 10
-                </div>
-
-            </div>
-            """, unsafe_allow_html=True)
-
-
-# ============================================================
-# INSIGHTS PAGE
-# ============================================================
-
-elif st.session_state.page == "Insights":
-
-    st.markdown("""
-    <div class="section-kicker">
-        MODEL PERFORMANCE
-    </div>
-
+    render_html("""
     <div class="section-title">
-        Behind the Prediction.
+        Intelligent Property Analysis
     </div>
 
-    <div class="section-text">
-        The project evaluates multiple regression algorithms and
-        selects the best-performing model for deployment.
+    <div class="section-subtitle">
+        Combining real estate data with Machine Learning for smarter predictions.
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
+    f1, f2, f3 = st.columns(3)
 
-    st.write("")
-    st.write("")
-
-
-    m1, m2, m3, m4 = st.columns(4)
-
-
-    with m1:
-        st.metric(
-            "Best Model",
-            "Linear Regression"
-        )
-
-
-    with m2:
-        st.metric(
-            "Testing R²",
-            "0.9724"
-        )
-
-
-    with m3:
-        st.metric(
-            "RMSE",
-            "$12,505"
-        )
-
-
-    with m4:
-        st.metric(
-            "MAE",
-            "$10,432"
-        )
-
-
-    st.write("")
-    st.write("")
-
-
-    st.markdown("""
-    <div class="prediction-container">
-
-        <div class="prediction-title">
-            Model Evaluation
+    with f1:
+        render_html("""
+        <div class="feature-card">
+            <div class="feature-icon">📐</div>
+            <div class="feature-title">Property Features</div>
+            <div class="feature-text">
+                Analyzes living area, lot size, basement and room details.
+            </div>
         </div>
+        """)
 
-        <div class="prediction-subtitle">
-            The following algorithms were compared during the project.
+    with f2:
+        render_html("""
+        <div class="feature-card">
+            <div class="feature-icon">🧠</div>
+            <div class="feature-title">Machine Learning</div>
+            <div class="feature-text">
+                Uses a trained regression model for intelligent price estimation.
+            </div>
         </div>
+        """)
 
+    with f3:
+        render_html("""
+        <div class="feature-card">
+            <div class="feature-icon">📈</div>
+            <div class="feature-title">High Performance</div>
+            <div class="feature-text">
+                Final Linear Regression model achieved a 97.24% testing R² score.
+            </div>
+        </div>
+        """)
+
+
+# ============================================================
+# MODEL INSIGHTS PAGE
+# ============================================================
+
+elif page == "📊 Model Insights":
+
+    render_html("""
+    <div class="section-title">
+        Model Performance
     </div>
-    """, unsafe_allow_html=True)
 
+    <div class="section-subtitle">
+        Comparison of Machine Learning models tested for house price prediction.
+    </div>
+    """)
 
-    st.write("")
-
-
-    models = pd.DataFrame({
+    model_data = pd.DataFrame({
         "Model": [
             "Linear Regression",
-            "Tuned Gradient Boosting",
-            "Tuned Random Forest",
-            "Tuned Decision Tree"
+            "Gradient Boosting",
+            "Random Forest",
+            "Decision Tree"
         ],
 
         "Testing R²": [
@@ -1211,139 +977,125 @@ elif st.session_state.page == "Insights":
             0.705922
         ],
 
-        "MAE": [
-            10431.66,
-            13084.38,
-            21414.52,
-            33382.12
+        "RMSE": [
+            12505.46,
+            16368.98,
+            27405.67,
+            40847.69
         ]
     })
 
-
     st.dataframe(
-        models,
+        model_data,
         use_container_width=True,
         hide_index=True
     )
 
+    st.bar_chart(
+        model_data.set_index("Model")["Testing R²"]
+    )
 
-# ============================================================
-# PROJECT PAGE
-# ============================================================
+    render_html("""
+    <div class="custom-card" style="margin-top:25px;">
 
-elif st.session_state.page == "Project":
+        <div style="
+            font-size:22px;
+            font-weight:800;
+            color:#20352a;
+        ">
+            🏆 Final Model Selection
+        </div>
 
-    st.markdown("""
-    <div class="section-kicker">
-        ABOUT THE PROJECT
+        <div style="
+            margin-top:15px;
+            color:#68766d;
+            line-height:1.8;
+        ">
+            Linear Regression was selected as the final model because
+            it achieved the highest Testing R² score of <b>97.24%</b>
+            and the lowest prediction error among the tested models.
+        </div>
+
     </div>
+    """)
 
+
+# ============================================================
+# ABOUT PAGE
+# ============================================================
+
+elif page == "ℹ️ About Project":
+
+    render_html("""
     <div class="section-title">
-        House Price Prediction with AI.
+        About HOMNIQ AI
     </div>
 
-    <div class="section-text">
-        This project is an end-to-end Machine Learning application
-        designed to predict residential property prices from important
-        housing characteristics.
+    <div class="section-subtitle">
+        An end-to-end Machine Learning project for intelligent real estate price estimation.
     </div>
-    """, unsafe_allow_html=True)
 
+    <div class="custom-card">
 
-    st.write("")
-    st.write("")
+        <div style="
+            font-size:45px;
+            margin-bottom:15px;
+        ">
+            🏡
+        </div>
 
+        <div style="
+            font-size:25px;
+            font-weight:800;
+            color:#20352a;
+        ">
+            From Data to Prediction
+        </div>
 
-    a1, a2 = st.columns(2)
+        <div style="
+            margin-top:15px;
+            color:#68766d;
+            line-height:1.8;
+            font-size:16px;
+        ">
 
+            HOMNIQ AI is a complete Machine Learning project
+            designed to estimate house prices based on important
+            property characteristics.
 
-    with a1:
+            <br><br>
 
-        st.markdown("""
-        <div class="feature-card">
+            The project workflow includes data preprocessing,
+            Exploratory Data Analysis, model training, evaluation,
+            cross-validation and hyperparameter tuning.
 
-            <div class="feature-icon">
-                🔬
-            </div>
+            <br><br>
 
-            <div class="feature-title">
-                Project Workflow
-            </div>
+            Four regression algorithms were evaluated:
+            Linear Regression, Decision Tree Regression,
+            Random Forest Regression and Gradient Boosting Regression.
 
-            <div class="feature-text">
+            <br><br>
 
-                Data Preparation<br><br>
-
-                Exploratory Data Analysis<br><br>
-
-                Model Training<br><br>
-
-                Cross Validation<br><br>
-
-                Hyperparameter Tuning<br><br>
-
-                Model Deployment
-
-            </div>
+            After comparing all model results, Linear Regression
+            achieved the strongest performance with a Testing R²
+            Score of 97.24%.
 
         </div>
-        """, unsafe_allow_html=True)
 
-
-    with a2:
-
-        st.markdown("""
-        <div class="feature-card">
-
-            <div class="feature-icon">
-                🧰
-            </div>
-
-            <div class="feature-title">
-                Technologies Used
-            </div>
-
-            <div class="feature-text">
-
-                Python<br><br>
-
-                Pandas & NumPy<br><br>
-
-                Scikit-learn<br><br>
-
-                Joblib<br><br>
-
-                Streamlit<br><br>
-
-                Machine Learning
-
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """)
 
 
 # ============================================================
 # FOOTER
 # ============================================================
 
-st.markdown("""
-<div class="footer-card">
-
-    <div class="footer-title">
-        HOMENIQ — AI Real Estate Intelligence
-    </div>
-
-    <div class="footer-text">
-        Developed by
-        <span class="footer-name">
-            Shiza Eman
-        </span>
-        &nbsp; | &nbsp;
-        Machine Learning Project
-        &nbsp; | &nbsp;
-        2026
-    </div>
-
+render_html("""
+<div class="footer">
+    Developed by Shiza Eman
+    <span class="footer-name">Shiza Eman</span>
+    &nbsp; • &nbsp;
+    "Machine Learning Project • Artificial Intelligence • Real Estate Intelligence"
 </div>
-""" )
+""")
